@@ -1,6 +1,8 @@
 const mapboxgl = require('mapbox-gl');
+const distance = require('@turf/distance');
 
 const mapConfig = {
+  zoomThreshold: 6,
   layers: [ 
     {
       id: 'pipelines',
@@ -27,19 +29,18 @@ const mapConfig = {
       name: 'Crude Oil',
       steps: {
         "circle-radius": [
-          [ 0.1, 1 ],
-          [ 10, 10 ],
-          [ 2000, 30 ],
-          [ 6500, 50 ]
+          [ 0.01, 5 ],
+          [ 1000, 50 ]
         ],
         "line-color": [
           [ 0, "hsla(44, 23%, 68%, 0)" ],
           [ 0.1, "hsl(0, 100%, 63%)" ],
-          [ 6500, "hsl(0, 100%, 33%)" ]
+          [ 1500, "hsl(0, 100%, 33%)" ]
         ],
         "line-width": [
-          [ 0, 1.5 ],
-          [ 6500, 10 ]
+          [ 0, 0 ],
+          [ 0.01, 1.5 ],
+          [ 1500, 10 ]
         ]
       }
     },
@@ -48,19 +49,18 @@ const mapConfig = {
       name: 'Salt/Produced Water',
       steps: {
         "circle-radius": [
-          [ 0.1, 1 ],
-          [ 10, 10 ],
-          [ 2000, 30 ],
-          [ 6500, 50 ]
+          [ 0.1, 4 ],
+          [ 5000, 50 ]
         ],
         "line-color": [
           [ 0, "hsla(44, 23%, 68%, 0)" ],
           [ 0.1, "hsl(0, 100%, 63%)" ],
-          [ 6500, "hsl(0, 100%, 33%)" ]
+          [ 5000, "hsl(0, 100%, 33%)" ]
         ],
         "line-width": [
-          [ 0, 1.5 ],
-          [ 6500, 10 ]
+          [ 0, 0 ],
+          [ 0.01, 1.5 ],
+          [ 5000, 10 ]
         ]
       }
     },
@@ -70,16 +70,17 @@ const mapConfig = {
       steps: {
         "circle-radius": [
           [ 0.001, 1 ],
-          [ 6500, 50 ]
+          [ 460, 50 ]
         ],
         "line-color": [
           [ 0, "hsla(44, 23%, 68%, 0)" ],
           [ 0.1, "hsl(0, 100%, 63%)" ],
-          [ 6500, "hsl(0, 100%, 33%)" ]
+          [ 460, "hsl(0, 100%, 33%)" ]
         ],
         "line-width": [
-          [ 0, 1.5 ],
-          [ 6500, 10 ]
+          [ 0, 0 ],
+          [ 0.01, 1.5 ],
+          [ 460, 10 ]
         ]
       }
     },
@@ -89,16 +90,17 @@ const mapConfig = {
       steps: {
         "circle-radius": [
           [ 0.001, 1 ],
-          [ 6500, 50 ]
+          [ 7100, 50 ]
         ],
         "line-color": [
           [ 0, "hsla(44, 23%, 68%, 0)" ],
           [ 0.1, "hsl(0, 100%, 63%)" ],
-          [ 6500, "hsl(0, 100%, 33%)" ]
+          [ 7100, "hsl(0, 100%, 33%)" ]
         ],
         "line-width": [
-          [ 0, 1.5 ],
-          [ 6500, 10 ]
+          [ 0, 0 ],
+          [ 0.01, 1.5 ],
+          [ 7100, 10 ]
         ]
       }
     },
@@ -108,16 +110,17 @@ const mapConfig = {
       steps: {
         "circle-radius": [
           [ 0.001, 1 ],
-          [ 6500, 50 ]
+          [ 675, 50 ]
         ],
         "line-color": [
           [ 0, "hsla(44, 23%, 68%, 0)" ],
           [ 0.1, "hsl(0, 100%, 63%)" ],
-          [ 6500, "hsl(0, 100%, 33%)" ]
+          [ 675, "hsl(0, 100%, 33%)" ]
         ],
         "line-width": [
-          [ 0, 1.5 ],
-          [ 6500, 10 ]
+          [ 0, 0 ],
+          [ 0.01, 1.5 ],
+          [ 675, 10 ]
         ]
       }
     },
@@ -127,16 +130,17 @@ const mapConfig = {
       steps: {
         "circle-radius": [
           [ 0.001, 1 ],
-          [ 6500, 50 ]
+          [ 2522, 50 ]
         ],
         "line-color": [
           [ 0, "hsla(44, 23%, 68%, 0)" ],
           [ 0.1, "hsl(0, 100%, 63%)" ],
-          [ 6500, "hsl(0, 100%, 33%)" ]
+          [ 2522, "hsl(0, 100%, 33%)" ]
         ],
         "line-width": [
-          [ 0, 1.5 ],
-          [ 6500, 10 ]
+          [ 0, 0 ],
+          [ 0.01, 1.5 ],
+          [ 2522, 10 ]
         ]
       }
     },
@@ -154,7 +158,8 @@ const mapConfig = {
           [ 6500, "hsl(0, 100%, 33%)" ]
         ],
         "line-width": [
-          [ 0, 1.5 ],
+          [ 0, 0 ],
+          [ 0.01, 1.5 ],
           [ 6500, 10 ]
         ]
       }
@@ -162,6 +167,10 @@ const mapConfig = {
   ]
 }
 
+let state = {
+  dataProp: 'crude_oil',
+  hovered: {}
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -172,6 +181,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   addDataSelect('menu', map);
   addLayerToggles('menu', map);
+  map.on('load', function() {
+    switchDataProp(mapConfig.dataProps[0], map);
+    initMapHover(map);
+    initMapMove(map);
+    setInterval(function() {
+      var features = map.queryRenderedFeatures({ layers: [ 'pipelines' ] });
+      console.log('pipelines', features);
+    },4000);
+  })
 });
 
 function getPropById(id) {
@@ -184,6 +202,36 @@ function getLayerByName(name) {
   return mapConfig.layers.find(function(l) {
     return l.name === name;
   });
+}
+
+function initMapHover(map) {
+  map.on('mousemove', function (e) {
+    if (map.getZoom() > mapConfig.zoomThreshold) {
+      var features = map.queryRenderedFeatures(e.point, { layers: [ 'incidents' ] });
+      addSpillDetails(features);
+      var featureIds = features.map(function(f) { return f['properties']['pipeline_id']; });
+      highlightFeatures('composite', featureIds, map);
+      console.log('hovered ' + features.length + ' features:', features);
+      // document.getElementById('debug').innerHTML = JSON.stringify(debug, null, 2);
+    }
+  });
+} 
+
+function initMapMove(map) {
+  map.on('moveend', function(e) {
+    var features = map.queryRenderedFeatures({ layers: [ 'incidents' ] });
+    displayTotals(features);
+  });
+}
+
+function displayTotals(features) {
+  const total = features.reduce((acc, curr) => {
+    return curr.properties.hasOwnProperty(state.dataProp) ? 
+      acc + curr['properties'][state.dataProp] :
+      acc
+  }, 0);
+  const parent = document.getElementById('total');
+  parent.innerHTML = Math.round(total*1000) + ' litres released in current view'; 
 }
 
 /**  
@@ -199,17 +247,34 @@ function updateLayerStyle(layer, prop, map) {
       });
       var newStyle = [ "case", ["has", prop.id], steps, fallback ];
       layer.layerIds.forEach(function(layerId) {
-        map.setFilter(layerId, [">", prop.id, 0]);
+        map.setFilter(layerId, ["has", prop.id]);
         map.setPaintProperty(layerId, styleProp, newStyle);
       });
     }
   });
 }
 
+function highlightFeatures(source, featureIds, map) {
+  console.log(featureIds); 
+  if (state.hovered.hasOwnProperty(source)) {
+    state.hovered[source].forEach(function(fid) {
+      map.setFeatureState({source: source, sourceLayer: 'pipelines', id: fid}, { hover: false});
+    });
+  }
+  if (featureIds.length > 0) {
+    featureIds.forEach(function(f) {
+      var featId = f;
+      map.setFeatureState({source: source, sourceLayer: 'pipelines', id: f}, { hover: true});
+    });
+    state.hovered[source] = featureIds;
+  }
+}
+
 function switchDataProp(newProp, map) {
   var updateLayers = mapConfig.layers.filter(function(l) { return l.dataStyle.length > 0 });
   updateLayers.forEach(function(l) {
     updateLayerStyle(l, newProp, map);
+    state['dataProp'] = newProp.id;
     // l.dataStyle.indexOf('line-width') > -1 ? updateLineLayer(l, newProp, map) : updateCircleLayer(l, newProp, map);
   });
 }
@@ -217,6 +282,39 @@ function switchDataProp(newProp, map) {
 /**
  * UI Elements
  */
+
+function addSpillDetails(features) {
+
+  function createSpillListItem(feature) {
+    const item = document.createElement('li');
+    const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    const dateObj = new Date(feature.properties['date']*1000);
+    item.innerHTML = `
+      <span class="item-label">Amount: </span>
+      <span class="item-value">${feature.properties[state['dataProp']]}</span>
+      <span class="item-label">Date: </span>
+      <span class="item-value">${dateObj.toLocaleDateString("en-US", dateOptions)}</span>
+    `;
+    return item;
+  }
+
+  const parent = document.getElementById('spills');
+
+  parent.innerHTML = '';
+  if (features.length > 0) {
+    parent.className = 'active';
+    features
+      .sort(function(a, b) {
+
+      })
+      .forEach(function(f) {
+        parent.appendChild(createSpillListItem(f));
+      });
+  } else {
+    parent.className = '';
+  }
+
+}
  
 // Data select for data props in config
 function addDataSelect(parentId, map) {
