@@ -38,10 +38,6 @@
     "composite": {
       "url": "mapbox://mapbox.mapbox-streets-v7,laneolson.dnklgfco,laneolson.8qhosvcn",
       "type": "vector"
-    },
-    "pipelines": {
-      "type": "vector",
-      "url": "http://localhost:8080/data/pipelines.json"
     }
   },
   "sprite": "mapbox://sprites/laneolson/cjjtgk8dm0fcs2rlw7nc1h2aa",
