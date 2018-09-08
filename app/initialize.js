@@ -1,8 +1,9 @@
 const mapboxgl = require('mapbox-gl');
 const distance = require('@turf/distance');
+const format = require('format-number');
 
 const mapConfig = {
-  zoomThreshold: 6,
+  zoomThreshold: 3,
   layers: [ 
     {
       id: 'pipelines',
@@ -208,11 +209,14 @@ function initMapHover(map) {
   map.on('mousemove', function (e) {
     if (map.getZoom() > mapConfig.zoomThreshold) {
       var features = map.queryRenderedFeatures(e.point, { layers: [ 'incidents' ] });
-      addSpillDetails(features);
-      var featureIds = features.map(function(f) { return f['properties']['pipeline_id']; });
-      highlightFeatures('composite', featureIds, map);
+      addSpillSummary(features);
+      var featureIds = features.map(function(f) { return parseInt(f['properties']['pipeline_id']); });
+      var incidentIds = features.map((f) => { return f.id });
+      highlightFeatures('composite', 'pipelines', featureIds, map);
+      highlightFeatures('composite', 'incidents', incidentIds, map);
       console.log('hovered ' + features.length + ' features:', features);
       // document.getElementById('debug').innerHTML = JSON.stringify(debug, null, 2);
+
     }
   });
 } 
@@ -230,8 +234,18 @@ function displayTotals(features) {
       acc + curr['properties'][state.dataProp] :
       acc
   }, 0);
+  const pipelines = features.reduce((acc, curr) => {
+    return curr.properties.hasOwnProperty('pipeline_id') && acc.indexOf(curr.properties['pipeline_id']) > -1 ? 
+      acc : acc.concat([curr.properties['pipeline_id']])
+  }, []);
+  const count = features.reduce((acc, curr) => {
+    return curr.properties.hasOwnProperty(state.dataProp) && curr['properties'][state.dataProp] > 0 ? 
+      acc+1 : acc
+  }, 0);
   const parent = document.getElementById('total');
-  parent.innerHTML = Math.round(total*1000) + ' litres released in current view'; 
+  parent.innerHTML = '<p>' + Math.round(total*1000) + ' litres released</p>' +
+    '<p>' + count + ' incidents</p>' +
+    '<p>' + pipelines.length + ' leaky pipelines</p>'; 
 }
 
 /**  
@@ -254,20 +268,19 @@ function updateLayerStyle(layer, prop, map) {
   });
 }
 
-function highlightFeatures(source, featureIds, map) {
-  console.log(featureIds); 
-  if (state.hovered.hasOwnProperty(source)) {
-    state.hovered[source].forEach(function(fid) {
-      map.setFeatureState({source: source, sourceLayer: 'pipelines', id: fid}, { hover: false});
+function highlightFeatures(source, sourceLayer, featureIds, map) {
+  if (state.hovered.hasOwnProperty(sourceLayer)) {
+    state.hovered[sourceLayer].forEach(function(fid) {
+      map.setFeatureState({source: source, sourceLayer: sourceLayer, id: fid }, { hover: false});
     });
   }
   if (featureIds.length > 0) {
     featureIds.forEach(function(f) {
       var featId = f;
-      map.setFeatureState({source: source, sourceLayer: 'pipelines', id: f}, { hover: true});
+      map.setFeatureState({source: source, sourceLayer: sourceLayer, id: f}, { hover: true});
     });
-    state.hovered[source] = featureIds;
   }
+  state.hovered[sourceLayer] = featureIds;
 }
 
 function switchDataProp(newProp, map) {
@@ -283,6 +296,29 @@ function switchDataProp(newProp, map) {
  * UI Elements
  */
 
+// "x spills that released y litres of {{substance}} from z pipelines "
+function getSpillSummary(features) {
+  const numPipelines = features.reduce((acc, curr) => {
+    return curr.properties.hasOwnProperty('pipeline_id') && acc.indexOf(curr.properties['pipeline_id']) > -1 ? 
+      acc : acc.concat([curr.properties['pipeline_id']])
+  }, []);
+
+  const litres = features.reduce((acc, curr) => {
+    return curr.properties.hasOwnProperty(state.dataProp) ? 
+      acc + curr['properties'][state.dataProp] :
+      acc
+  }, 0);
+
+  return `${features.length} spills from ${numPipelines.length} pipelines released ${Math.round(litres*1000)} litres of ${state.dataProp}`;
+}
+
+
+function addSpillSummary(features) {
+  const summary = getSpillSummary(features);
+  const parent = document.getElementById('spills');
+  parent.innerHTML = '<p>' + summary + '</p>';
+}
+
 function addSpillDetails(features) {
 
   function createSpillListItem(feature) {
@@ -297,8 +333,6 @@ function addSpillDetails(features) {
     `;
     return item;
   }
-
-  const parent = document.getElementById('spills');
 
   parent.innerHTML = '';
   if (features.length > 0) {

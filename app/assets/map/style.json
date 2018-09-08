@@ -38,6 +38,10 @@
     "composite": {
       "url": "mapbox://mapbox.mapbox-streets-v7,laneolson.dnklgfco,laneolson.8qhosvcn",
       "type": "vector"
+    },
+    "pipelines": {
+      "type": "vector",
+      "url": "http://localhost:8080/data/pipelines.json"
     }
   },
   "sprite": "mapbox://sprites/laneolson/cjjtgk8dm0fcs2rlw7nc1h2aa",
@@ -356,7 +360,12 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "hsla(44, 18%, 27%, 0.4)"
+        "line-color": "hsla(44, 18%, 27%, 0.4)",
+        "line-width": ["case",
+          ["boolean", ["feature-state", "hover"], false],
+          10,
+          1
+        ]
       }
     },
     {
@@ -385,7 +394,12 @@
       },
       "paint": {
         "circle-radius": 0,
-        "circle-opacity": 0.2
+        "circle-opacity": 0.2,
+        "circle-color": ["case",
+          ["boolean", ["feature-state", "hover"], false],
+          "#ff0000",
+          "#000000"
+        ]
       } 
     },
     {
@@ -405,6 +419,21 @@
         ],
         "line-color": "rgb(25,255,25)",
         "line-width": 5
+      }
+    },
+    {
+      "id": "pipelines_hover",
+      "type": "line",
+      "source": "composite",
+      "source-layer": "pipelines",
+      "filter": ["in", "LICENCE_NO"],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgb(25,255,25)",
+        "line-width": 6
       }
     },
     {
