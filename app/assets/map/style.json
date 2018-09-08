@@ -356,7 +356,12 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "hsla(44, 18%, 27%, 0.4)"
+        "line-color": "hsla(44, 18%, 27%, 0.4)",
+        "line-width": ["case",
+          ["boolean", ["feature-state", "hover"], false],
+          10,
+          1
+        ]
       }
     },
     {
@@ -370,28 +375,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": [
-          "case",
-          ["has", "crude_oil"],
-          [
-            "interpolate",
-            ["linear"],
-            ["get", "crude_oil"],
-            0,
-            "hsla(44, 23%, 68%, 0)",
-            0.1,
-            "hsl(0, 100%, 63%)",
-            6500,
-            "hsl(0, 100%, 33%)"
-          ],
-          "hsla(44, 23%, 68%, 0)"
-        ],
-        "line-width": [
-          "case",
-          ["has", "crude_oil"],
-          ["interpolate", ["linear"], ["get", "crude_oil"], 0, 1.5, 6500, 10],
-          1
-        ]
+        "line-width": 0
       }
     },
     {
@@ -405,21 +389,48 @@
         "visibility": "visible"
       },
       "paint": {
-        "circle-radius": [
-          "interpolate",
-          ["linear"],
-          ["get", "crude_oil"],
-          0.1,
-          ["case", ["has", "crude_oil"], 1, 0],
-          10,
-          ["case", ["has", "crude_oil"], 10, 0],
-          2000,
-          ["case", ["has", "crude_oil"], 30, 0],
-          6500,
-          ["case", ["has", "crude_oil"], 50, 0]
-        ],
-        "circle-opacity": 0.2
+        "circle-radius": 0,
+        "circle-opacity": 0.2,
+        "circle-color": ["case",
+          ["boolean", ["feature-state", "hover"], false],
+          "#ff0000",
+          "#000000"
+        ]
       } 
+    },
+    {
+      "id": "pipeline-hl",
+      "type": "line",
+      "source": "composite",
+      "source-layer": "pipelines",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-opacity": ["case",
+          ["boolean", ["feature-state", "hover"], false],
+          1,
+          0
+        ],
+        "line-color": "rgb(25,255,25)",
+        "line-width": 5
+      }
+    },
+    {
+      "id": "pipelines_hover",
+      "type": "line",
+      "source": "composite",
+      "source-layer": "pipelines",
+      "filter": ["in", "LICENCE_NO"],
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "rgb(25,255,25)",
+        "line-width": 6
+      }
     },
     {
       "id": "waterway-label",
@@ -548,7 +559,7 @@
       "paint": {
         "text-halo-color": "hsl(0, 0%, 100%)",
         "text-halo-width": 1,
-        "text-color": "hsl(0, 0%, 62%)",
+        "text-color": "hsl(0, 0%, 32%)",
         "text-halo-blur": 0
       }
     },
@@ -571,7 +582,7 @@
       "paint": {
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.25,
-        "text-color": "hsl(0, 0%, 62%)",
+        "text-color": "hsl(0, 0%, 32%)",
         "text-halo-blur": 0
       }
     },
@@ -585,7 +596,7 @@
       "filter": ["==", "type", "village"],
       "layout": {
         "text-field": "{name_en}",
-        "text-font": ["DIN Offc Pro Regular", "Arial Unicode MS Regular"],
+        "text-font": ["DIN Offc Pro Bold", "Arial Unicode MS Regular"],
         "text-max-width": 7,
         "text-size": {
           "base": 1,
@@ -598,7 +609,7 @@
         "text-halo-width": 1.25,
         "text-color": {
           "base": 1,
-          "stops": [[10, "hsl(0, 0%, 62%)"], [11, "hsl(0, 0%, 55%)"]]
+          "stops": [[10, "hsl(0, 0%, 32%)"], [11, "hsl(0, 0%, 32%)"]]
         },
         "text-halo-blur": 0
       }
@@ -620,7 +631,7 @@
           "base": 1,
           "stops": [
             [11, ["DIN Offc Pro Bold", "Arial Unicode MS Regular"]],
-            [12, ["DIN Offc Pro Medium", "Arial Unicode MS Regular"]]
+            [12, ["DIN Offc Pro Bold", "Arial Unicode MS Regular"]]
           ]
         },
         "text-padding": 2,
@@ -631,7 +642,7 @@
       "paint": {
         "text-color": {
           "base": 1,
-          "stops": [[10, "hsl(0, 0%, 62%)"], [11, "hsl(0, 0%, 55%)"]]
+          "stops": [[10, "hsl(0, 0%, 32%)"], [11, "hsl(0, 0%, 32%)"]]
         },
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.25,
@@ -702,7 +713,7 @@
         "text-max-width": 7
       },
       "paint": {
-        "text-color": "hsl(0, 0%, 42%)",
+        "text-color": "hsl(0, 0%, 32%)",
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.25,
         "icon-opacity": {
@@ -750,7 +761,7 @@
       "paint": {
         "text-halo-width": 1,
         "text-halo-color": "#ffffff",
-        "text-color": "hsl(0, 0%, 42%)",
+        "text-color": "hsl(0, 0%, 32%)",
         "text-halo-blur": 0,
         "icon-opacity": {
           "base": 1,

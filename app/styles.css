@@ -3,6 +3,14 @@ html,body {
   height:100%;
   padding:0;
   margin:0;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+}
+
+h1, h2, h3, h4, h5, h6 { font-family: 'Domine', serif; }
+
+* {
+  box-sizing: border-box;
 }
 
 .map {
@@ -13,6 +21,54 @@ html,body {
   right:0;
   width:100%;
   height:100%;
+}
+ 
+#spills {
+  position:absolute;
+  bottom: 16px;
+  left: 16px;
+  background: #fff;
+  border: 1px solid #999;
+  margin:0;
+  padding:0;
+  list-style:none;
+  z-index: 10;
+  width:300px;
+  max-height: calc(100% - 32px);
+  overflow:auto;
+}
+
+#spills li {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  align-items: flex-start;
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  font-size: 14px;
+}
+
+#spills span {
+  display:block;
+  width: 70%;
+}
+
+#spills span:nth-child(odd) {
+  font-weight: bold;
+  width: 30%;
+}
+
+.total {
+  position:absolute;
+  bottom: 16px;
+  right: 16px;
+  background: #fff;
+  border: 1px solid #999;
+  padding: 12px;
+  z-index: 10;
 }
 
 .controls {
